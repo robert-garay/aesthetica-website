@@ -5,7 +5,7 @@
 - **Tagline**: "Learn to glow."
 - **Repo**: github.com/robert-garay/aesthetica-website
 - **Vercel**: pending
-- **Phase**: Marketing implementation in progress
+- **Phase**: Marketing complete, auth UI complete, portal core in progress
 - **Last Updated**: 2026-03-30
 
 ## Architecture
@@ -18,10 +18,11 @@
 - Payments: Stripe (not yet configured)
 
 ## Recent Changes
-- **2026-03-30**: Rebuilt `/` as full Apple-inspired marketing landing page with hero, stats bar, bento features, how-it-works, CTA, and footer.
-- **2026-03-30**: Added fixed frosted-glass `MarketingNav` with mobile fullscreen menu and scroll-state behavior.
-- **2026-03-30**: Added reusable `AnimateIn` intersection observer component for subtle fade + translateY reveal animations.
-- **2026-03-30**: Updated global design tokens to Apple-style near-white/near-black palette with restrained shadows and 1rem base radius.
+- **2026-03-30**: Built authenticated portal app shell and core LMS pages: `/dashboard`, `/courses/[courseId]/chapters/[chapterId]`, `/hours`, and `/assessments` with Apple-style mobile/desktop layouts.
+- **2026-03-30**: Built polished Apple-style auth UI for `/sign-in`, `/sign-up`, and `/forgot-password` with shared split layout, role card selector, password visibility toggles, password strength bars, and forgot-password success state.
+- **2026-03-30**: Added missing `components/auth/sign-up-form.tsx` scaffold to resolve auth import and unblock production build.
+- **2026-03-30**: Added `(marketing)/pricing` page with billing toggle, 3-tier pricing cards, CE add-on strip, and FAQ accordion.
+- **2026-03-30**: Added `(marketing)/schools` page with dark hero, trust strip, compliance/instructor feature rows, seat pricing, and demo CTA.
 
 ## File Structure
 ```
@@ -40,6 +41,7 @@ src/
 │   ├── ui/              # shadcn/ui primitives
 │   ├── layout/          # Header, sidebar, footer, bottom nav
 │   ├── marketing/       # Marketing nav/footer + landing section composition
+│   ├── auth/            # Auth form components + shared SSO icon
 │   ├── lms/             # Course player, assessments, progress, forums, messaging, gradebook, skills
 │   └── shared/          # Empty states, data tables, skeletons
 ├── lib/
@@ -65,10 +67,17 @@ src/
 | Page | Route | Status |
 |------|-------|--------|
 | Landing (marketing) | / | done |
+| Pricing (marketing) | /pricing | done |
+| For Schools (marketing) | /schools | done |
+| About (marketing) | /about | done |
 | 404 | /not-found | done |
-| Sign In | /sign-in | scaffold only |
-| Sign Up | /sign-up | scaffold only |
-| Dashboard | /dashboard | scaffold only |
+| Sign In | /sign-in | done |
+| Sign Up | /sign-up | done |
+| Forgot Password | /forgot-password | done |
+| Dashboard | /dashboard | done |
+| Course Player | /courses/[courseId]/chapters/[chapterId] | done |
+| Hours | /hours | done |
+| Assessments | /assessments | done |
 
 ## New / Updated Files
 - `src/app/page.tsx` — complete Apple-style marketing landing page implementation.
@@ -77,6 +86,27 @@ src/
 - `src/components/shared/animate-in.tsx` — lightweight intersection observer reveal wrapper.
 - `src/app/(marketing)/layout.tsx` — shared marketing layout wrapper for grouped routes.
 - `src/app/globals.css` — Apple-inspired semantic tokens, radius, and shadow tuning.
+- `src/components/marketing/pricing-plans.tsx` — client pricing toggle with dynamic student billing and pricing tiers.
+- `src/app/(marketing)/pricing/page.tsx` — marketing pricing page with hero, plans, CE strip, and FAQ.
+- `src/app/(marketing)/schools/page.tsx` — schools-focused marketing page with compliance + instructor sections.
+- `src/app/(marketing)/about/page.tsx` — mission/value storytelling page with waitlist form CTA.
+- `src/app/(auth)/layout.tsx` — shared auth split layout with left brand panel + right form panel.
+- `src/app/(auth)/sign-in/page.tsx` — metadata wrapper route for sign-in form.
+- `src/app/(auth)/sign-up/page.tsx` — metadata wrapper route for sign-up form.
+- `src/app/(auth)/forgot-password/page.tsx` — metadata wrapper route for reset form.
+- `src/components/auth/sign-in-form.tsx` — fully styled sign-in form with show/hide password and Google SSO button.
+- `src/components/auth/sign-up-form.tsx` — role selector, 2-column identity inputs, password strength meter, terms checkbox, and SSO.
+- `src/components/auth/forgot-password-form.tsx` — reset request form with local success confirmation state.
+- `src/components/auth/google-icon.tsx` — reusable inline Google icon for auth buttons.
+- `src/app/(portal)/layout.tsx` — authenticated portal shell with fixed desktop sidebar + mobile top/bottom navigation chrome.
+- `src/app/(portal)/dashboard/page.tsx` — student daily dashboard with hours/progress stats, continue-learning card, goals, and announcements.
+- `src/app/(portal)/courses/[courseId]/chapters/[chapterId]/page.tsx` — chapter lesson player with chapter rail, video placeholder UI, lesson tabs, and mobile chapters sheet.
+- `src/app/(portal)/hours/page.tsx` — licensing hours tracker with progress ring, session stats, and activity log rows.
+- `src/app/(portal)/assessments/page.tsx` — assessment list with passed/available/locked states and contextual actions.
+- `src/components/layout/app-sidebar.tsx` — desktop portal sidebar navigation and account footer cluster.
+- `src/components/layout/mobile-header.tsx` — mobile top bar with menu sheet, notifications, and compact profile avatar.
+- `src/components/layout/mobile-bottom-nav.tsx` — fixed mobile bottom tab bar with route-aware active state.
+- `src/components/layout/portal-nav.ts` — shared portal navigation section/tab configuration for server + client layout components.
 
 ## Specs Location
 All specs are in `specs/`:
@@ -88,9 +118,10 @@ All specs are in `specs/`:
 
 ## Pending Tasks
 - [x] Build (marketing): Landing page (/)
-- [ ] Build (marketing): Pricing, Schools, About pages
-- [ ] Build (auth): Sign In, Sign Up, Forgot Password
-- [ ] Build (portal): Dashboard, Course Player, Hours Tracker, Skills, Forums, Messages
+- [x] Build (marketing): Pricing, Schools, About pages
+- [x] Build (auth): Sign In, Sign Up, Forgot Password
+- [ ] Build (portal): Skills, Forums, Messages
+- [ ] Build (portal): Notifications, Settings, Billing pages
 - [ ] Configure: NextAuth.js v5 + Prisma + Supabase
 - [ ] Configure: Mux video integration
 - [ ] Configure: Stripe billing

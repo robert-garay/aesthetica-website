@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 const links = [
-  { href: '#features', label: 'Learn more' },
-  { href: '#schools', label: 'For Schools' },
-  { href: '#pricing', label: 'Pricing' },
+  { href: '/about', label: 'About' },
+  { href: '/schools', label: 'For Schools' },
+  { href: '/pricing', label: 'Pricing' },
 ]
 
 export function MarketingNav() {
@@ -60,13 +60,13 @@ export function MarketingNav() {
 
           <div className="hidden items-center gap-4 md:flex">
             <Link
-              href="#"
+              href="/sign-in"
               className="text-[14px] font-medium text-[#6E6E73] transition-colors hover:text-[#1D1D1F]"
             >
               Sign in
             </Link>
             <Link
-              href="#"
+              href="/sign-up"
               className="rounded-full bg-[#3D1A4B] px-4 py-1.5 text-[14px] font-medium text-white transition-opacity hover:opacity-90"
             >
               Get Started →
@@ -109,14 +109,14 @@ export function MarketingNav() {
 
           <div className="flex flex-col gap-4">
             <Link
-              href="#"
+              href="/sign-in"
               className="text-lg font-medium text-[#6E6E73]"
               onClick={() => setMenuOpen(false)}
             >
               Sign in
             </Link>
             <Link
-              href="#"
+              href="/sign-up"
               className="inline-flex w-fit rounded-full bg-[#3D1A4B] px-5 py-2.5 text-[15px] font-medium text-white"
               onClick={() => setMenuOpen(false)}
             >
