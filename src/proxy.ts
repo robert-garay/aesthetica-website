@@ -37,5 +37,19 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ['/((?!api/auth|api/stripe|api/mux|api/debug|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Only run middleware on app pages — never on API routes, static files, or images
+  matcher: [
+    '/dashboard/:path*',
+    '/courses/:path*',
+    '/hours/:path*',
+    '/skills/:path*',
+    '/forums/:path*',
+    '/messages/:path*',
+    '/assessments/:path*',
+    '/notifications/:path*',
+    '/billing/:path*',
+    '/sign-in',
+    '/sign-up',
+    '/forgot-password',
+  ],
 }
