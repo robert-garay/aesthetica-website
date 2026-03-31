@@ -14,6 +14,7 @@ const signInSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  trustHost: true,
   // Use database sessions when adapter is present (JWT strategy conflicts with Prisma adapter in v5 beta)
   session: { strategy: 'database' },
   pages: {
