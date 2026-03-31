@@ -14,7 +14,8 @@ const signInSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  // Use database sessions when adapter is present (JWT strategy conflicts with Prisma adapter in v5 beta)
+  session: { strategy: 'database' },
   pages: {
     signIn: '/sign-in',
     error: '/sign-in',
@@ -66,17 +67,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async session({ session, user }) {
       if (user) {
-        token.id = user.id
-        token.globalRole = (user as { globalRole?: GlobalRole }).globalRole ?? 'STUDENT'
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.globalRole = token.globalRole as GlobalRole
+        session.user.id = user.id
+        // Fetch globalRole from DB since it's not in the default session user
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { globalRole: true },
+        })
+        session.user.globalRole = dbUser?.globalRole ?? 'STUDENT'
       }
       return session
     },
