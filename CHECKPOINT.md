@@ -110,11 +110,17 @@ src/
 - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, NEXT_PUBLIC_SITE_URL
 
 ## Pending Tasks
-- [ ] Configure Mux video integration
-- [ ] Configure Resend email (welcome, password reset)
+
+### Active
 - [ ] Wire portal pages to real DB data (replace mock data)
 - [ ] Build: Skills, Forums, Messages portal pages
 - [ ] Build: Notifications, Settings, Billing portal pages
-- [ ] Forgot password flow (email token + reset form)
 - [ ] Connect custom domain
 - [ ] Run Lighthouse audit
+
+### Backlog (needs external assets/accounts)
+- [ ] Mux — video streaming (needs course videos to upload)
+- [ ] Resend — transactional email (needs email copy; blocks password reset flow)
+- [ ] Forgot password flow (depends on Resend)
+- [ ] AI tutor / Lumina (needs OpenAI API key + course content embedded)
+- [ ] Course content authoring (needs licensed esthetics educator)
