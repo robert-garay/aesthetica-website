@@ -6,6 +6,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { GlobalRole } from '@prisma/client'
+import { authConfig } from './auth.config'
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -13,9 +14,9 @@ const signInSchema = z.object({
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   trustHost: true,
-  // Use database sessions when adapter is present (JWT strategy conflicts with Prisma adapter in v5 beta)
   session: { strategy: 'database' },
   pages: {
     signIn: '/sign-in',

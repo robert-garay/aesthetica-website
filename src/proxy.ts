@@ -1,13 +1,15 @@
-import { auth } from '@/lib/auth'
+import NextAuth from 'next-auth'
+import { authConfig } from '@/lib/auth.config'
 import { NextResponse } from 'next/server'
 
-const PUBLIC_ROUTES = ['/', '/pricing', '/schools', '/about', '/sign-in', '/sign-up', '/forgot-password']
+const { auth } = NextAuth(authConfig)
+
 const AUTH_ROUTES = ['/sign-in', '/sign-up', '/forgot-password']
 const PORTAL_PREFIX = ['/dashboard', '/courses', '/hours', '/skills', '/forums', '/messages', '/assessments', '/notifications', '/billing']
 
 export default auth((req) => {
-  const { nextUrl, auth: session } = req
-  const isLoggedIn = !!session
+  const { nextUrl } = req
+  const isLoggedIn = !!req.auth
 
   const isAuthRoute = AUTH_ROUTES.some((r) => nextUrl.pathname.startsWith(r))
   const isPortalRoute = PORTAL_PREFIX.some((r) => nextUrl.pathname.startsWith(r))
