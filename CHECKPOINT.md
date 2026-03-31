@@ -4,9 +4,10 @@
 - **Product**: Aesthetica — VA State-Qualified Aesthetic Learning Portal
 - **Tagline**: "Learn to glow."
 - **Repo**: github.com/robert-garay/aesthetica-website
-- **Vercel**: pending
-- **Phase**: Marketing complete, auth UI complete, portal core in progress
-- **Last Updated**: 2026-03-30
+- **Vercel**: https://aesthetica-website.vercel.app ✅ LIVE
+- **Vercel Dashboard**: https://vercel.com/roberts-projects-966b2130/aesthetica-website
+- **Phase**: Deployed — backend setup next
+- **Last Updated**: 2026-03-31
 
 ## Architecture
 - Next.js 16 (App Router) + TypeScript strict + Tailwind CSS v4 + shadcn/ui
