@@ -8,6 +8,7 @@ import { GoogleIcon } from '@/components/auth/google-icon'
 import { signUpAction } from '@/actions/auth.actions'
 import { signIn } from 'next-auth/react'
 
+
 const inputClassName =
   'h-12 w-full rounded-xl border border-[#D2D2D7] bg-white px-4 text-[15px] text-[#1D1D1F] placeholder:text-[#6E6E73] outline-none ring-0 focus:border-[#3D1A4B] focus:ring-2 focus:ring-[#3D1A4B]/10 transition-all'
 
@@ -41,7 +42,22 @@ export function SignUpForm() {
     formData.set('role', role)
     startTransition(async () => {
       const result = await signUpAction(formData)
-      if (result?.error) setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+      } else if (result?.success && result.email) {
+        // Auto sign-in after successful registration
+        const signInResult = await signIn('credentials', {
+          email: result.email,
+          password: formData.get('password') as string,
+          redirect: false,
+        })
+        if (signInResult?.error) {
+          setError('Account created. Please sign in.')
+          window.location.href = '/sign-in'
+        } else {
+          window.location.href = '/dashboard'
+        }
+      }
     })
   }
 

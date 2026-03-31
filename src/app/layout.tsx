@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { fontDisplay, fontBody, fontMono } from "@/lib/fonts"
+import { AuthSessionProvider } from "@/components/shared/session-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -53,7 +54,9 @@ export default function RootLayout({
       className={`${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
-        {children}
+        <AuthSessionProvider>
+          {children}
+        </AuthSessionProvider>
       </body>
     </html>
   )

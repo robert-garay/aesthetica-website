@@ -8,4 +8,15 @@ declare module 'next-auth' {
       globalRole: GlobalRole
     }
   }
+
+  interface User {
+    globalRole?: GlobalRole
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string
+    globalRole: GlobalRole
+  }
 }

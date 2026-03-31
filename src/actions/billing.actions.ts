@@ -1,6 +1,7 @@
 'use server'
 
-import { auth } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { stripe, PRICE_IDS, type PlanKey } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
@@ -8,7 +9,7 @@ import { redirect } from 'next/navigation'
 // ─── Create Checkout Session ──────────────────────────────────────────────────
 
 export async function createCheckoutSession(plan: PlanKey) {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect('/sign-in')
 
   const user = session.user
@@ -55,7 +56,7 @@ export async function createCheckoutSession(plan: PlanKey) {
 // ─── Create Customer Portal Session ──────────────────────────────────────────
 
 export async function createBillingPortalSession() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect('/sign-in')
 
   const sub = await prisma.subscription.findFirst({
@@ -78,7 +79,7 @@ export async function createBillingPortalSession() {
 // ─── Get Subscription Status ──────────────────────────────────────────────────
 
 export async function getSubscriptionStatus() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null
 
   return prisma.subscription.findFirst({

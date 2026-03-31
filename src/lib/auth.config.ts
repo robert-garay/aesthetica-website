@@ -1,20 +1,10 @@
-import type { NextAuthConfig } from 'next-auth'
-
 /**
- * Edge-compatible auth config — no Prisma, no Node.js-only modules.
- * Used by the proxy (middleware) for session checking.
+ * Edge-compatible auth config for the proxy (middleware).
+ * next-auth v4 middleware uses getToken() — no config needed here.
+ * This file is kept as a placeholder for future use.
  */
-export const authConfig: NextAuthConfig = {
-  trustHost: true,
-  session: { strategy: 'jwt' },
+export const authConfig = {
   pages: {
     signIn: '/sign-in',
-    error: '/sign-in',
-  },
-  providers: [],
-  callbacks: {
-    authorized({ auth }) {
-      return !!auth
-    },
   },
 }

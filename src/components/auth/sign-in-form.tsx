@@ -2,10 +2,9 @@
 
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { GoogleIcon } from '@/components/auth/google-icon'
-import { signInAction } from '@/actions/auth.actions'
 import { signIn } from 'next-auth/react'
 
 const inputClassName =
@@ -14,16 +13,30 @@ const inputClassName =
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    const formData = new FormData(event.currentTarget)
-    startTransition(async () => {
-      const result = await signInAction(formData)
-      if (result?.error) setError(result.error)
+    setIsPending(true)
+
+    const form = event.currentTarget
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
     })
+
+    setIsPending(false)
+
+    if (result?.error) {
+      setError('Invalid email or password.')
+    } else {
+      window.location.href = '/dashboard'
+    }
   }
 
   return (

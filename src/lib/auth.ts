@@ -1,21 +1,13 @@
-import NextAuth from 'next-auth'
-import Credentials from 'next-auth/providers/credentials'
-import Google from 'next-auth/providers/google'
-import { z } from 'zod'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import NextAuth, { type NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { GlobalRole } from '@prisma/client'
 
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-})
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true,
-  secret: process.env.AUTH_SECRET,
-  // JWT sessions — no adapter, no database session reads on every request
-  // User data is written to DB on sign-in via callbacks
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/sign-in',
@@ -23,24 +15,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   providers: [
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
-      ? [Google({
+      ? [GoogleProvider({
           clientId: process.env.AUTH_GOOGLE_ID,
           clientSecret: process.env.AUTH_GOOGLE_SECRET,
         })]
       : []),
-    Credentials({
+    CredentialsProvider({
+      name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const parsed = signInSchema.safeParse(credentials)
-        if (!parsed.success) return null
-
-        const { email, password } = parsed.data
+        if (!credentials?.email || !credentials?.password) return null
 
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { email: credentials.email as string },
           select: {
             id: true,
             email: true,
@@ -54,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user || !user.passwordHash || !user.isActive) return null
 
-        const valid = await bcrypt.compare(password, user.passwordHash)
+        const valid = await bcrypt.compare(credentials.password as string, user.passwordHash)
         if (!valid) return null
 
         return {
@@ -69,42 +59,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Handle Google OAuth — upsert user in DB
       if (account?.provider === 'google' && profile?.email) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: profile.email },
-        })
-
-        if (!existingUser) {
-          const names = (profile.name as string ?? '').split(' ')
+        const existing = await prisma.user.findUnique({ where: { email: profile.email } })
+        if (!existing) {
+          const fullName = profile.name as string ?? ''
+          const names = fullName.split(' ')
           await prisma.user.create({
             data: {
               email: profile.email,
-              name: profile.name as string,
+              name: fullName,
               firstName: names[0] ?? null,
               lastName: names.slice(1).join(' ') || null,
-              image: profile.picture as string ?? null,
+              image: (profile as { picture?: string }).picture ?? null,
               emailVerified: new Date(),
               globalRole: 'STUDENT',
             },
           })
-        } else if (!existingUser.emailVerified) {
-          await prisma.user.update({
-            where: { id: existingUser.id },
-            data: { emailVerified: new Date() },
-          })
         }
-
-        // Store the DB user ID on the user object
         const dbUser = await prisma.user.findUnique({
           where: { email: profile.email },
-          select: { id: true, globalRole: true, isActive: true },
+          select: { id: true, isActive: true },
         })
-
         if (!dbUser?.isActive) return false
-
         user.id = dbUser.id
-        ;(user as { globalRole?: GlobalRole }).globalRole = dbUser.globalRole
       }
       return true
     },
@@ -112,17 +89,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.globalRole = (user as { globalRole?: GlobalRole }).globalRole ?? 'STUDENT'
+        // Fetch globalRole from DB on first sign-in
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { globalRole: true },
+        })
+        token.globalRole = dbUser?.globalRole ?? 'STUDENT'
       }
       return token
     },
 
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id as string
         session.user.globalRole = token.globalRole as GlobalRole
       }
       return session
     },
   },
-})
+}
+
+const handler = NextAuth(authOptions)
+export { handler as GET, handler as POST }
+export default handler
