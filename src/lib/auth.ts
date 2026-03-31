@@ -1,12 +1,10 @@
 import NextAuth from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { GlobalRole } from '@prisma/client'
-import { authConfig } from './auth.config'
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -14,10 +12,11 @@ const signInSchema = z.object({
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  ...authConfig,
-  adapter: PrismaAdapter(prisma),
   trustHost: true,
-  session: { strategy: 'database' },
+  secret: process.env.AUTH_SECRET,
+  // JWT sessions — no adapter, no database session reads on every request
+  // User data is written to DB on sign-in via callbacks
+  session: { strategy: 'jwt' },
   pages: {
     signIn: '/sign-in',
     error: '/sign-in',
@@ -69,15 +68,59 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (user) {
-        session.user.id = user.id
-        // Fetch globalRole from DB since it's not in the default session user
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { globalRole: true },
+    async signIn({ user, account, profile }) {
+      // Handle Google OAuth — upsert user in DB
+      if (account?.provider === 'google' && profile?.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: profile.email },
         })
-        session.user.globalRole = dbUser?.globalRole ?? 'STUDENT'
+
+        if (!existingUser) {
+          const names = (profile.name as string ?? '').split(' ')
+          await prisma.user.create({
+            data: {
+              email: profile.email,
+              name: profile.name as string,
+              firstName: names[0] ?? null,
+              lastName: names.slice(1).join(' ') || null,
+              image: profile.picture as string ?? null,
+              emailVerified: new Date(),
+              globalRole: 'STUDENT',
+            },
+          })
+        } else if (!existingUser.emailVerified) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: { emailVerified: new Date() },
+          })
+        }
+
+        // Store the DB user ID on the user object
+        const dbUser = await prisma.user.findUnique({
+          where: { email: profile.email },
+          select: { id: true, globalRole: true, isActive: true },
+        })
+
+        if (!dbUser?.isActive) return false
+
+        user.id = dbUser.id
+        ;(user as { globalRole?: GlobalRole }).globalRole = dbUser.globalRole
+      }
+      return true
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.globalRole = (user as { globalRole?: GlobalRole }).globalRole ?? 'STUDENT'
+      }
+      return token
+    },
+
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string
+        session.user.globalRole = token.globalRole as GlobalRole
       }
       return session
     },
